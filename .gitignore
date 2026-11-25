@@ -1,0 +1,13 @@
+# build output
+dist/
+.astro/
+
+# dependencies
+node_modules/
+.pnpm-store/
+
+# environment / editors / OS
+.env
+.env.*
+.idea/
+.DS_Store

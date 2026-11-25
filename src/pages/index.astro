@@ -1,0 +1,183 @@
+---
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { Image } from "astro:assets";
+import { getCollection, getEntry, render } from "astro:content";
+import ContactIcon from "../components/ContactIcon.astro";
+import { formatYearMonth } from "../lib/dates";
+import "../styles/global.css";
+
+const profileEntry = await getEntry("profile", "profile");
+if (!profileEntry) throw new Error("Missing src/content/profile.md");
+const profile = profileEntry.data;
+const { Content: Summary } = await render(profileEntry);
+
+const skillGroups = await Promise.all(
+  (await getCollection("skills"))
+    .sort((a, b) => a.data.order - b.data.order)
+    .map(async (entry) => ({
+      ...entry.data,
+      id: entry.id,
+      ...(await render(entry)),
+    })),
+);
+
+const jobs = await Promise.all(
+  (await getCollection("experience"))
+    .sort((a, b) => b.data.start.localeCompare(a.data.start))
+    .map(async (entry) => ({
+      ...entry.data,
+      id: entry.id,
+      ...(await render(entry)),
+    })),
+);
+
+const contacts = [
+  profile.phone && {
+    kind: "phone" as const,
+    label: profile.phone,
+    href: `tel:${profile.phone.replace(/[^\d+]/g, "")}`,
+  },
+  {
+    kind: "email" as const,
+    label: profile.email,
+    href: `mailto:${profile.email}`,
+  },
+  ...profile.links.map((link) => ({
+    kind: link.url.includes("linkedin.com")
+      ? ("linkedin" as const)
+      : ("link" as const),
+    label: link.label,
+    href: link.url,
+  })),
+].filter((contact) => !!contact);
+
+// The PDF is produced by `pnpm pdf` into public/. Only link to it once it exists.
+const hasPdf = existsSync(join(process.cwd(), "public", profile.pdfFileName));
+
+const title = `${profile.name} – ${profile.headline}`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta
+      name="description"
+      content={`CV of ${profile.name}, ${profile.headline}.`}
+    />
+    <meta name="author" content={profile.name} />
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <div class="cv">
+      <header class="masthead">
+        <div class="identity">
+          <h1>{profile.name}</h1>
+          <p class="headline">{profile.headline}</p>
+          {profile.location && <p class="location">{profile.location}</p>}
+        </div>
+
+        {profile.photo && (
+          <Image
+            class="photo"
+            src={profile.photo}
+            alt={profile.photoAlt}
+            width={160}
+            height={160}
+            densities={[1, 2]}
+            loading="eager"
+            fetchpriority="high"
+          />
+        )}
+
+        <ul class="contacts" aria-label="Contact information">
+          {contacts.map((contact) => (
+            <li>
+              <a class="no-print-url" href={contact.href}>
+                <ContactIcon kind={contact.kind} />
+                <span>{contact.label}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        <p class="actions print-hide">
+          {hasPdf && (
+            <a class="button" href={`/${profile.pdfFileName}`} download>
+              Download PDF
+            </a>
+          )}
+          <button class="button" type="button" data-print>
+            Print
+          </button>
+        </p>
+      </header>
+
+      <main class="content">
+        <section class="summary" aria-labelledby="summary-title">
+          <h2 id="summary-title" class="section-title">
+            Summary
+          </h2>
+          <Summary />
+        </section>
+
+        <section class="skills" aria-labelledby="skills-title">
+          <h2 id="skills-title" class="sidebar-title">
+            Skills
+          </h2>
+          {skillGroups.map((group) => (
+            <section class="skill-group" aria-labelledby={`skills-${group.id}`}>
+              <h3 id={`skills-${group.id}`}>{group.title}</h3>
+              <group.Content />
+            </section>
+          ))}
+        </section>
+
+        <section class="experience" aria-labelledby="experience-title">
+          <h2 id="experience-title" class="section-title">
+            Professional Experience
+          </h2>
+          {jobs.map((job) => {
+            const details = [job.employmentType, job.location]
+              .filter(Boolean)
+              .join(" · ");
+            return (
+              <article class="job">
+                <h3>{job.role}</h3>
+                <p class="job-company">
+                  {job.company}
+                  {details && (
+                    <span class="job-details">{` · ${details}`}</span>
+                  )}
+                </p>
+                <p class="job-dates">
+                  <time datetime={job.start}>{formatYearMonth(job.start)}</time>
+                  {" – "}
+                  {job.end ? (
+                    <time datetime={job.end}>{formatYearMonth(job.end)}</time>
+                  ) : (
+                    "Present"
+                  )}
+                </p>
+                <div class="job-body">
+                  <job.Content />
+                </div>
+              </article>
+            );
+          })}
+        </section>
+      </main>
+    </div>
+
+    <script>
+      for (const button of document.querySelectorAll<HTMLButtonElement>(
+        "[data-print]",
+      )) {
+        button.addEventListener("click", () => window.print());
+      }
+    </script>
+  </body>
+</html>

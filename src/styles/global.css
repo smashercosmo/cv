@@ -1,0 +1,629 @@
+/*
+ * Layout strategy
+ * ---------------
+ * The DOM is a single linear column in the order a recruiter (and an ATS
+ * parser) expects: name → headline → contacts → summary → skills → experience.
+ * Wide screens rearrange it into a two-column card with CSS grid; narrow
+ * screens and print keep the linear source order, so the PDF text layer reads
+ * top-to-bottom with no interleaved sidebar.
+ */
+
+:root {
+  --accent: #4f46e5;
+  --accent-soft: #a5b4fc;
+  --side-bg: #2c3e50;
+  --side-fg: #ecf0f1;
+  --side-accent: #93c5fd;
+  --text: #1f2937;
+  --text-muted: #4b5563;
+  --page-bg: #f4f4f9;
+  --card-bg: #fff;
+  --side-width: minmax(16rem, 30%);
+
+  color-scheme: light;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--page-bg);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+p,
+li {
+  text-wrap: pretty;
+}
+
+ul {
+  margin: 0;
+  padding-inline-start: 1.25em;
+}
+
+li + li {
+  margin-block-start: 0.4em;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 0.15em;
+}
+
+img {
+  display: block;
+  max-inline-size: 100%;
+  block-size: auto;
+}
+
+/* ---------- Card ---------- */
+
+.cv {
+  max-inline-size: 75rem;
+  margin-inline: auto;
+  background: var(--card-bg);
+}
+
+/* ---------- Masthead (name, headline, contacts, photo) ---------- */
+
+.masthead {
+  /* Dark band on narrow screens; becomes the top of the sidebar on wide ones. */
+  --fg: var(--side-fg);
+  --muted: var(--side-fg);
+  --icon: var(--side-accent);
+  --headline: var(--side-accent);
+
+  display: grid;
+  grid-template-areas:
+    "photo"
+    "identity"
+    "contacts"
+    "actions";
+  justify-items: start;
+  gap: 1.25rem;
+  padding: 2rem 1.5rem;
+  color: var(--fg);
+  background: var(--side-bg);
+}
+
+.identity {
+  grid-area: identity;
+}
+
+.photo {
+  grid-area: photo;
+  inline-size: 8rem;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid var(--accent-soft);
+}
+
+h1 {
+  font-size: clamp(2.25rem, 1.5rem + 3vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.headline {
+  margin: 0.25rem 0 0;
+  font-size: clamp(1.25rem, 1rem + 1vw, 1.5rem);
+  font-weight: 500;
+  color: var(--headline);
+}
+
+.location {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+}
+
+.contacts {
+  grid-area: contacts;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9375rem;
+}
+
+.contacts li {
+  margin: 0;
+  min-inline-size: 0;
+}
+
+.contacts a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.contacts a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.contact-icon {
+  flex-shrink: 0;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  fill: var(--icon);
+}
+
+.actions {
+  grid-area: actions;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 1rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--fg);
+  text-decoration: none;
+  background: transparent;
+  border: 2px solid var(--accent-soft);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.button:hover {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.button:focus-visible,
+.contacts a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ---------- Main content ---------- */
+
+.content {
+  display: grid;
+  gap: 2rem;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.section-title,
+.sidebar-title {
+  margin-block-end: 1rem;
+  padding-block-end: 0.375rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border-block-end: 2px solid #e5e7eb;
+}
+
+.summary p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.summary p + p {
+  margin-block-start: 1em;
+}
+
+/* Skills */
+
+.skills {
+  --skills-heading: var(--accent);
+  font-size: 0.9375rem;
+}
+
+.skill-group + .skill-group {
+  margin-block-start: 1.5rem;
+}
+
+.skill-group h3 {
+  margin-block-end: 0.5rem;
+  font-size: 1.125rem;
+  color: var(--skills-heading);
+}
+
+.skill-group li::marker {
+  color: var(--accent-soft);
+}
+
+/* Experience */
+
+.job {
+  padding-inline-start: 1rem;
+  border-inline-start: 4px solid var(--accent-soft);
+}
+
+.job + .job {
+  margin-block-start: 2rem;
+}
+
+.job h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.job-company {
+  margin: 0.125rem 0 0;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.job-details {
+  font-weight: 400;
+}
+
+.job-dates {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  font-style: italic;
+  color: #6b7280;
+}
+
+.job-body {
+  font-size: 0.9375rem;
+  color: #374151;
+}
+
+.job-body p {
+  margin: 0;
+}
+
+/* ---------- Wide screens: two-column card ---------- */
+
+@media screen and (width >= 40rem) {
+  body {
+    padding: 2.5rem;
+  }
+
+  .cv {
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgb(0 0 0 / 0.2);
+    overflow: clip;
+  }
+}
+
+@media screen and (width >= 60rem) {
+  .cv {
+    display: grid;
+    grid-template-columns: var(--side-width) 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  /* Continuous dark sidebar behind the photo and the skills. */
+  .cv::before {
+    content: "";
+    grid-column: 1;
+    grid-row: 1 / -1;
+    background: var(--side-bg);
+  }
+
+  .masthead,
+  .content {
+    grid-column: 1 / -1;
+    display: grid;
+    /* Same-cascade fallback for engines without subgrid. */
+    grid-template-columns: var(--side-width) 1fr;
+    grid-template-columns: subgrid;
+    padding: 0;
+    gap: 0;
+  }
+
+  .masthead {
+    --fg: var(--text);
+    --muted: #374151;
+    --icon: var(--accent);
+    --headline: var(--accent);
+
+    grid-row: 1;
+    grid-template-areas:
+      "photo identity"
+      "photo contacts"
+      "photo actions";
+    row-gap: 1rem;
+    background: none;
+  }
+
+  .photo {
+    place-self: center;
+    inline-size: 10rem;
+    margin-block: 2.5rem;
+  }
+
+  .identity,
+  .contacts,
+  .actions {
+    margin-inline: 2.5rem;
+  }
+
+  .identity {
+    align-self: end;
+    padding-block-start: 2.5rem;
+  }
+
+  .actions {
+    align-self: start;
+    padding-block-end: 1.5rem;
+    border-block-end: 4px solid var(--accent);
+    inline-size: calc(100% - 5rem);
+  }
+
+  .content {
+    grid-row: 2;
+    grid-template-rows: auto 1fr;
+  }
+
+  .summary,
+  .experience {
+    grid-column: 2;
+    padding: 1.5rem 2.5rem 0;
+  }
+
+  .experience {
+    padding-block-end: 3rem;
+  }
+
+  .skills {
+    --skills-heading: var(--side-fg);
+
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    padding: 0 2.5rem 3rem;
+    color: var(--side-fg);
+  }
+
+  .skills .sidebar-title {
+    color: var(--side-accent);
+    border-color: var(--accent);
+  }
+
+  .skill-group h3 {
+    font-size: 1rem;
+  }
+}
+
+/* ---------- Print / PDF ---------- */
+
+@page {
+  /* Paper size is left to the printer; `pnpm pdf` renders A4. */
+  margin: 2cm;
+  /*
+   * No running header/footer (e.g. "Page 1 of 3"): Chrome writes margin-box
+   * text to the PDF before the page content, so parsers would read it ahead
+   * of the name.
+   */
+}
+
+@media print {
+  :root {
+    --text: #000;
+    --text-muted: #000;
+    --accent: #312e81;
+    --accent-soft: #6366f1;
+
+    background: #fff;
+  }
+
+  body {
+    font-family: Georgia, "Times New Roman", Times, serif;
+    font-size: 11pt;
+    line-height: 1.4;
+    color: #000;
+    /* Some PDF parsers split "fi"/"fl" ligature glyphs into garbage. */
+    font-variant-ligatures: none;
+    /* Georgia defaults to old-style figures; lining digits read better in phone numbers and dates. */
+    font-variant-numeric: lining-nums;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: Arial, Helvetica, sans-serif;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  p,
+  li {
+    font-size: 11pt;
+    orphans: 3;
+    widows: 3;
+  }
+
+  .print-hide,
+  .contact-icon {
+    display: none !important;
+  }
+
+  .cv {
+    max-inline-size: none;
+    background: none;
+  }
+
+  /* Masthead: name + headline + contacts on the left, small photo on the right. */
+  .masthead {
+    --fg: #000;
+    --muted: #000;
+    --headline: var(--accent);
+
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "identity photo"
+      "contacts photo";
+    align-items: start;
+    gap: 6pt 16pt;
+    padding: 0 0 10pt;
+    background: none;
+    border-block-end: 2pt solid var(--accent);
+  }
+
+  h1 {
+    font-size: 22pt;
+    letter-spacing: 0;
+  }
+
+  .headline {
+    font-size: 13pt;
+  }
+
+  .photo {
+    inline-size: 2.6cm;
+    border-width: 1.5pt;
+    break-inside: avoid;
+  }
+
+  /* One line, with real separator characters in the text layer. */
+  .contacts {
+    display: block;
+    font-size: 10pt;
+  }
+
+  .contacts li {
+    display: inline;
+    /* Keep each phone/email/URL intact so parsers see it as one token. */
+    white-space: nowrap;
+  }
+
+  .contacts li + li::before {
+    content: " | ";
+  }
+
+  .contacts a {
+    display: inline;
+    text-decoration: none;
+  }
+
+  /* Reveal URLs of links in body content (contact links already show them). */
+  .content a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.875em;
+    color: #333;
+    word-break: break-all;
+  }
+
+  .content a[href^="#"]::after,
+  .content a[href^="mailto:"]::after,
+  .content a[href^="tel:"]::after,
+  .content a[href].no-print-url::after {
+    content: "";
+  }
+
+  .content {
+    display: block;
+    padding: 0;
+  }
+
+  .content > section {
+    margin-block-start: 14pt;
+  }
+
+  .section-title,
+  .sidebar-title {
+    margin-block-end: 6pt;
+    padding-block-end: 2pt;
+    font-size: 14pt;
+    color: var(--accent);
+    border-block-end: 1pt solid #999;
+  }
+
+  .summary p + p {
+    margin-block-start: 6pt;
+  }
+
+  .skills {
+    font-size: 11pt;
+  }
+
+  .skill-group {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .skill-group + .skill-group {
+    margin-block-start: 8pt;
+  }
+
+  .skill-group h3 {
+    margin-block-end: 3pt;
+    font-size: 12pt;
+    color: #000;
+  }
+
+  li + li {
+    margin-block-start: 2pt;
+  }
+
+  /* Keep every job (title, company, dates, bullets) on a single page. */
+  .job {
+    padding-inline-start: 8pt;
+    border-inline-start-width: 2pt;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .job + .job {
+    margin-block-start: 10pt;
+  }
+
+  .job h3 {
+    font-size: 12pt;
+  }
+
+  /* Company and dates on one line: "Company · Contract | Mar 2024 – Nov 2025". */
+  .job-company,
+  .job-dates {
+    display: inline;
+    margin: 0;
+    font-size: 11pt;
+    color: #000;
+  }
+
+  .job-company {
+    font-weight: 700;
+  }
+
+  .job-company::after {
+    content: " | ";
+    font-weight: 400;
+  }
+
+  .job-dates {
+    font-style: normal;
+  }
+
+  .job-body {
+    margin-block-start: 3pt;
+    font-size: 11pt;
+    color: #000;
+  }
+}

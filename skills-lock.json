@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "skills": {
+    "print": {
+      "source": "mgifford/accessibility-skills",
+      "commit": "3f7adea8127056fbff1e00ba6784acf39cf9cd81",
+      "sourceType": "github",
+      "skillPath": "skills/print/SKILL.md",
+      "computedHash": "c1b8bc45a9343dd3d546aca2cb98b7bf3483360aca6e7bba209d48b7fac36d08"
+    }
+  }
+}
